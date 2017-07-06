@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Charts</title>
+		<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<!-- Vex Assets -->
+		<script type="text/javascript" src="assets/vex.combined.min.js"></script>
+		<script type="text/javascript">vex.defaultOptions.className = 'vex-theme-plain';</script>
+		<link rel="stylesheet" type="text/css" href="assets/vex.css">
+		<link rel="stylesheet" type="text/css" href="assets/vex-theme-plain.css">
+		<style>
+
+			#chart {
+				width: 100vw;
+				height: 100vh;
+			}
+
+		</style>
+	</head>
+
+	<body>
+
+		<div id="chart"></div>
+
+		<script type="text/javascript">
+
+			let drawChart = (chart, data, options) => {
+				chart.draw(data, options);
+			}
+
+			let insertRow = (chart, data, options, row) => {
+				let w = data.getNumberOfRows();
+				data.insertRows(w, [row]);
+				drawChart(chart, data, options);
+			}
+
+			let cleanData = (input) => {
+				let rows = input.split('%').filter(cell => {
+					return cell;
+				}).map(cell => {
+					let row = cell.split(',').map(val => {
+						if(val){
+							return parseInt(val);
+						}
+						else{
+							return 0;
+						}
+					});
+					while(row.length < 2){
+						row.push(0);
+					}
+					return row;
+				});
+				rows.forEach(row => {
+					console.log(row);
+				});
+				return rows;
+			}
+
+			let daysPassed = 0;
+			let nextRow = (rows, start) => {
+				let next = new Date(start.getTime());
+				next.setDate(start.getDate() + daysPassed);
+				daysPassed++;
+				let val = rows.shift();
+				if(val){
+					val.unshift(next);
+				}
+				return val;
+			}
+
+			let main = (rows) => {
+
+				let options = {
+					title: 'Lake Town Outbreak',
+					hAxis: {
+						title: 'Time (Days)',
+						format: 'MMMM d'
+					},
+					vAxis: {
+						title: 'Infected (People)',
+						minValue: 0
+					},
+					animation: {
+						duration: 1000,
+						easing: 'in'
+					}
+				};
+
+				let div = document.getElementById('chart');
+				let chart = new google.visualization.LineChart(div);
+				let data = new google.visualization.DataTable();
+				data.addColumn('date', 'Time (Days)');
+				data.addColumn('number', 'No Action');
+				data.addColumn('number', 'Team A');
+
+				let start = new Date('5/1/2017');
+
+				data.addRow(nextRow(rows, start));
+				data.addRow(nextRow(rows, start));
+				drawChart(chart, data, options);
+
+				let itv = setInterval((e) => {
+					let row = nextRow(rows, start);
+					if(row){
+						insertRow(chart, data, options, row);
+					}
+					else{
+						clearInterval(itv);
+					}
+				}, 2000);
+
+			}
+
+			google.charts.load('current', {
+				packages: ['corechart']
+			});
+
+			google.charts.setOnLoadCallback(() => {
+				vex.dialog.prompt({
+					message: 'Load Data',
+					callback: (data) => {
+						if(data){
+							let rows = cleanData(data);
+							main(rows);
+						}
+					}
+				});
+			});
+
+		</script>
+
+	</body>
+</html>
