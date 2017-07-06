@@ -14,13 +14,11 @@
 			#chart {
 				width: 100vw;
 				height: 100vh;
-			}
 
 		</style>
 	</head>
 
 	<body>
-
 		<div id="chart"></div>
 
 		<script type="text/javascript">
@@ -47,13 +45,17 @@
 							return 0;
 						}
 					});
-					while(row.length < 2){
+					return row;
+				});
+				let length = rows[0].length;
+				rows = rows.map(row => {
+					while(row.length < length){
 						row.push(0);
 					}
 					return row;
 				});
 				rows.forEach(row => {
-					console.log(row);
+					console.log(row.join(','));
 				});
 				return rows;
 			}
@@ -70,6 +72,9 @@
 				return val;
 			}
 
+			const STEP_SIZE = 500;
+			const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
 			let main = (rows) => {
 
 				let options = {
@@ -83,8 +88,11 @@
 						minValue: 0
 					},
 					animation: {
-						duration: 1000,
+						duration: STEP_SIZE,
 						easing: 'in'
+					},
+					legend: {
+						position: 'right'
 					}
 				};
 
@@ -92,8 +100,15 @@
 				let chart = new google.visualization.LineChart(div);
 				let data = new google.visualization.DataTable();
 				data.addColumn('date', 'Time (Days)');
-				data.addColumn('number', 'No Action');
-				data.addColumn('number', 'Team A');
+				rows[0].forEach((series, idx) => {
+					if(idx === 0){
+						data.addColumn('number', 'No Action');
+					}
+					else{
+						let letter = ALPHABET[idx];
+						data.addColumn('number', 'Team ' + letter);
+					}
+				});
 
 				let start = new Date('5/1/2017');
 
@@ -109,7 +124,7 @@
 					else{
 						clearInterval(itv);
 					}
-				}, 2000);
+				}, STEP_SIZE * 1.5);
 
 			}
 
